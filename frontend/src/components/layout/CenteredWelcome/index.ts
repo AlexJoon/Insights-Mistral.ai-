@@ -1,0 +1,1 @@
+export { CenteredWelcome } from './CenteredWelcome';

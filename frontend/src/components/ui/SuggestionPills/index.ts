@@ -1,0 +1,1 @@
+export { SuggestionPills } from './SuggestionPills';

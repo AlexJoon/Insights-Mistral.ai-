@@ -1,0 +1,99 @@
+/**
+ * Home Page styles - Copilot-inspired layout
+ */
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Chat view - When messages exist */
+.chatView {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.message {
+  display: flex;
+  animation: slideUp 0.2s ease-out;
+}
+
+.userMessage {
+  justify-content: flex-end;
+}
+
+.assistantMessage {
+  justify-content: flex-start;
+}
+
+.messageContent {
+  max-width: 80%;
+  padding: var(--spacing-4) var(--spacing-5);
+  border-radius: 12px;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.userMessage .messageContent {
+  background-color: var(--color-interactive-primary);
+  color: white;
+}
+
+.assistantMessage .messageContent {
+  background-color: var(--color-surface-default);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-default);
+}
+
+.inputContainer {
+  border-top: 1px solid var(--color-border-default);
+  background-color: var(--color-background-primary);
+  padding: var(--spacing-6);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .messages {
+    padding: var(--spacing-4);
+  }
+
+  .messageContent {
+    max-width: 90%;
+  }
+
+  .inputContainer {
+    padding: var(--spacing-4);
+  }
+}
