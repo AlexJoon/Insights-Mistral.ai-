@@ -11,6 +11,7 @@ import { NavigationSidebar } from '@/components/navigation/NavigationSidebar';
 import { ChatInput } from '@/components/input/ChatInput';
 import { SuggestionPills } from '@/components/ui/SuggestionPills';
 import { ConversationList } from '@/components/conversation/ConversationList';
+import { Message } from '@/components/chat/Message';
 import { useChatHandler } from '@/hooks/useChatHandler';
 import { useConversationPersistence } from '@/hooks/useConversationPersistence';
 import { useConversationRouter } from '@/hooks/useConversationRouter';
@@ -179,24 +180,18 @@ export default function HomePage() {
         <div className={styles.chatView}>
           <div className={styles.messages}>
             {currentConversation?.messages.map((message) => (
-              <div
+              <Message
                 key={message.id}
-                className={`${styles.message} ${
-                  message.role === 'user' ? styles.userMessage : styles.assistantMessage
-                }`}
-              >
-                <div className={styles.messageContent}>
-                  {message.content}
-                </div>
-              </div>
+                content={message.content}
+                role={message.role}
+              />
             ))}
 
             {isStreaming && currentStreamingMessage && (
-              <div className={`${styles.message} ${styles.assistantMessage}`}>
-                <div className={styles.messageContent}>
-                  {currentStreamingMessage}
-                </div>
-              </div>
+              <Message
+                content={currentStreamingMessage}
+                role="assistant"
+              />
             )}
           </div>
 

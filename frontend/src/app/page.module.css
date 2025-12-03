@@ -33,6 +33,16 @@
   gap: var(--spacing-4);
 }
 
+/* Remove vertical scrollbar */
+.messages::-webkit-scrollbar {
+  display: none;
+}
+
+.messages {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 .message {
   display: flex;
   animation: slideUp 0.2s ease-out;
