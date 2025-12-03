@@ -2,9 +2,11 @@
 API route definitions.
 Centralized route registration and organization.
 """
+from typing import Optional
 from starlette.routing import Route, Mount
 from starlette.responses import JSONResponse
 from backend.api.chat_routes import ChatRoutes
+from backend.api.rag_routes import RAGRoutes
 
 
 async def health_check(request):
@@ -12,17 +14,21 @@ async def health_check(request):
     return JSONResponse({"status": "healthy", "service": "mistral-chat-api"})
 
 
-def create_routes(chat_routes: ChatRoutes) -> list:
+def create_routes(
+    chat_routes: ChatRoutes,
+    rag_routes: Optional[RAGRoutes] = None
+) -> list:
     """
     Create all application routes.
 
     Args:
         chat_routes: Chat routes handler instance
+        rag_routes: Optional RAG routes handler instance
 
     Returns:
         List of Route objects
     """
-    return [
+    routes = [
         # Health check
         Route("/health", health_check, methods=["GET"]),
 
@@ -46,3 +52,25 @@ def create_routes(chat_routes: ChatRoutes) -> list:
             methods=["DELETE"]
         ),
     ]
+
+    # Add RAG routes if available
+    if rag_routes:
+        rag_endpoints = [
+            # RAG query endpoints
+            Route("/api/rag/query", rag_routes.query_syllabi, methods=["POST"]),
+            Route("/api/rag/courses", rag_routes.get_relevant_courses, methods=["GET"]),
+
+            # RAG system endpoints
+            Route("/api/rag/stats", rag_routes.get_stats, methods=["GET"]),
+            Route("/api/rag/health", rag_routes.health_check, methods=["GET"]),
+
+            # RAG management endpoints
+            Route(
+                "/api/rag/syllabi/{document_id}",
+                rag_routes.delete_syllabus,
+                methods=["DELETE"]
+            ),
+        ]
+        routes.extend(rag_endpoints)
+
+    return routes
