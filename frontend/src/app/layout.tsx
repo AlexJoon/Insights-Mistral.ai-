@@ -4,14 +4,19 @@
  */
 
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Be_Vietnam_Pro } from 'next/font/google';
+import { Providers } from '@/components/providers/Providers';
 import '../styles/globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+const beVietnamPro = Be_Vietnam_Pro({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-be-vietnam-pro',
+});
 
 export const metadata: Metadata = {
-  title: 'Mistral Chat - AI Assistant',
-  description: 'A modular chat application powered by Mistral AI',
+  title: 'Insights - AI Research Assistant',
+  description: 'A modular chat application powered by Mistral AI with enterprise design',
 };
 
 export default function RootLayout({
@@ -21,7 +26,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={beVietnamPro.className}>
+        <Providers>
+          {children}
+        </Providers>
+      </body>
     </html>
   );
 }
