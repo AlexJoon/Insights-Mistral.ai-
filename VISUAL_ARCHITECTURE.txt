@@ -1,0 +1,400 @@
+╔══════════════════════════════════════════════════════════════════════════════════╗
+║                    MISTRAL CHAT APPLICATION ARCHITECTURE                         ║
+║                          Complete System Diagram                                 ║
+╚══════════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                                  USER BROWSER                                     │
+│                            http://localhost:3000                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      │ HTTP/SSE
+                                      ↓
+╔══════════════════════════════════════════════════════════════════════════════════╗
+║                              FRONTEND (Next.js)                                  ║
+║                               Port: 3000                                         ║
+╠══════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                  ║
+║  ┌────────────────────────────────────────────────────────────────────────┐    ║
+║  │                        PRESENTATION LAYER                               │    ║
+║  │  Components (React + TypeScript)                                        │    ║
+║  ├────────────────────────────────────────────────────────────────────────┤    ║
+║  │                                                                         │    ║
+║  │  ┌─────────────────┐    ┌─────────────────────────────────────┐       │    ║
+║  │  │ Sidebar/        │    │ Chat/                               │       │    ║
+║  │  │                 │    │                                     │       │    ║
+║  │  │ • Sidebar.tsx   │    │ • ChatArea.tsx                      │       │    ║
+║  │  │ • ConvItem.tsx  │    │ • MessageBubble.tsx                 │       │    ║
+║  │  │                 │    │ • MessageInput.tsx                  │       │    ║
+║  │  └─────────────────┘    └─────────────────────────────────────┘       │    ║
+║  │                                                                         │    ║
+║  │  ┌───────────────────────────────────────────────────────────┐         │    ║
+║  │  │ ChatContainer.tsx                                         │         │    ║
+║  │  │ (Main orchestrator)                                       │         │    ║
+║  │  └───────────────────────────────────────────────────────────┘         │    ║
+║  └────────────────────────────────────────────────────────────────────────┘    ║
+║                                      │                                          ║
+║                                      ↓                                          ║
+║  ┌────────────────────────────────────────────────────────────────────────┐    ║
+║  │                           HOOKS LAYER                                   │    ║
+║  │  Custom React Hooks                                                     │    ║
+║  ├────────────────────────────────────────────────────────────────────────┤    ║
+║  │                                                                         │    ║
+║  │  • useChatHandler.ts  → Encapsulates chat logic                        │    ║
+║  │                                                                         │    ║
+║  └────────────────────────────────────────────────────────────────────────┘    ║
+║                                      │                                          ║
+║                    ┌─────────────────┴─────────────────┐                       ║
+║                    ↓                                     ↓                       ║
+║  ┌─────────────────────────────┐    ┌──────────────────────────────────┐      ║
+║  │    STATE LAYER              │    │    SERVICES LAYER                 │      ║
+║  │    Zustand Store            │    │    API Communication              │      ║
+║  ├─────────────────────────────┤    ├──────────────────────────────────┤      ║
+║  │                             │    │                                  │      ║
+║  │ • chat-store.ts             │    │ • api-client.ts                  │      ║
+║  │   - conversations[]         │    │ • sse-client.ts ← SSE Streaming  │      ║
+║  │   - currentConversation     │    │ • chat-service.ts                │      ║
+║  │   - isStreaming             │    │ • conversation-service.ts        │      ║
+║  │   - streamingMessage        │    │                                  │      ║
+║  │   - error                   │    │                                  │      ║
+║  │                             │    │                                  │      ║
+║  └─────────────────────────────┘    └──────────────────────────────────┘      ║
+║                                      │                                          ║
+║                                      │ HTTP/SSE                                 ║
+║                                      ↓                                          ║
+║  ┌────────────────────────────────────────────────────────────────────────┐    ║
+║  │                          TYPES LAYER                                    │    ║
+║  │  TypeScript Definitions                                                 │    ║
+║  ├────────────────────────────────────────────────────────────────────────┤    ║
+║  │  • chat.ts   → Message, Conversation, ChatRequest                      │    ║
+║  │  • api.ts    → ApiConfig, ApiResponse, RequestOptions                  │    ║
+║  └────────────────────────────────────────────────────────────────────────┘    ║
+║                                                                                  ║
+╚══════════════════════════════════════════════════════════════════════════════════╝
+                                      │
+                                      │ HTTP POST /api/chat/stream
+                                      │ GET /api/conversations
+                                      ↓
+╔══════════════════════════════════════════════════════════════════════════════════╗
+║                              BACKEND (Python)                                    ║
+║                            Port: 8000 (Uvicorn)                                  ║
+╠══════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                  ║
+║  ┌────────────────────────────────────────────────────────────────────────┐    ║
+║  │                        MIDDLEWARE LAYER                                 │    ║
+║  │  Request/Response Processing (Starlette)                                │    ║
+║  ├────────────────────────────────────────────────────────────────────────┤    ║
+║  │                                                                         │    ║
+║  │  1. CORSMiddleware           → Allow http://localhost:3000             │    ║
+║  │  2. RequestValidator         → Validate Content-Type, headers          │    ║
+║  │  3. ErrorHandler             → Catch & format all errors               │    ║
+║  │                                                                         │    ║
+║  └────────────────────────────────────────────────────────────────────────┘    ║
+║                                      │                                          ║
+║                                      ↓                                          ║
+║  ┌────────────────────────────────────────────────────────────────────────┐    ║
+║  │                          API ROUTES LAYER                               │    ║
+║  │  HTTP Endpoint Handlers                                                 │    ║
+║  ├────────────────────────────────────────────────────────────────────────┤    ║
+║  │                                                                         │    ║
+║  │  routes.py                                                              │    ║
+║  │  ├─ GET  /health                                                        │    ║
+║  │  ├─ POST /api/chat/stream              ┐                                │    ║
+║  │  ├─ GET  /api/conversations            │                                │    ║
+║  │  ├─ POST /api/conversations            │→ Handled by                    │    ║
+║  │  ├─ GET  /api/conversations/{id}       │  chat_routes.py                │    ║
+║  │  ├─ PUT  /api/conversations/{id}       │  (ChatRoutes class)            │    ║
+║  │  └─ DELETE /api/conversations/{id}     ┘                                │    ║
+║  │                                                                         │    ║
+║  └────────────────────────────────────────────────────────────────────────┘    ║
+║                                      │                                          ║
+║                                      ↓                                          ║
+║  ┌────────────────────────────────────────────────────────────────────────┐    ║
+║  │                        SERVICES LAYER                                   │    ║
+║  │  Business Logic (Pure Python)                                           │    ║
+║  ├────────────────────────────────────────────────────────────────────────┤    ║
+║  │                                                                         │    ║
+║  │  ┌───────────────────────┐      ┌─────────────────────────────┐        │    ║
+║  │  │ MistralService        │      │ ConversationManager         │        │    ║
+║  │  │                       │      │                             │        │    ║
+║  │  │ • stream_chat_        │      │ • create_conversation()     │        │    ║
+║  │  │   completion()        │      │ • get_conversation()        │        │    ║
+║  │  │   → SSE streaming     │      │ • add_message()             │        │    ║
+║  │  │   → Chunk yielding    │      │ • delete_conversation()     │        │    ║
+║  │  │                       │      │                             │        │    ║
+║  │  │ • non_streaming_      │      │ In-memory storage:          │        │    ║
+║  │  │   chat_completion()   │      │ _conversations: Dict        │        │    ║
+║  │  │                       │      │                             │        │    ║
+║  │  └───────────────────────┘      └─────────────────────────────┘        │    ║
+║  │                                                                         │    ║
+║  └────────────────────────────────────────────────────────────────────────┘    ║
+║                                      │                                          ║
+║                                      ↓                                          ║
+║  ┌────────────────────────────────────────────────────────────────────────┐    ║
+║  │                          MODELS LAYER                                   │    ║
+║  │  Data Structures                                                        │    ║
+║  ├────────────────────────────────────────────────────────────────────────┤    ║
+║  │                                                                         │    ║
+║  │  • Message        → role, content, id, timestamp                        │    ║
+║  │  • Conversation   → id, title, messages[], created_at                  │    ║
+║  │  • ChatRequest    → conversation_id, message, model, temp              │    ║
+║  │  • StreamChunk    → content, is_final, conversation_id                 │    ║
+║  │                                                                         │    ║
+║  └────────────────────────────────────────────────────────────────────────┘    ║
+║                                                                                  ║
+║  ┌────────────────────────────────────────────────────────────────────────┐    ║
+║  │                       UTILITIES LAYER                                   │    ║
+║  │  Supporting Functions                                                   │    ║
+║  ├────────────────────────────────────────────────────────────────────────┤    ║
+║  │                                                                         │    ║
+║  │  • logger.py       → Centralized logging                                │    ║
+║  │  • validators.py   → Input validation functions                         │    ║
+║  │                                                                         │    ║
+║  └────────────────────────────────────────────────────────────────────────┘    ║
+║                                                                                  ║
+║  ┌────────────────────────────────────────────────────────────────────────┐    ║
+║  │                       CONFIG LAYER                                      │    ║
+║  │  Configuration Management                                               │    ║
+║  ├────────────────────────────────────────────────────────────────────────┤    ║
+║  │                                                                         │    ║
+║  │  • settings.py                                                          │    ║
+║  │    → load_config() reads .env                                           │    ║
+║  │    → MistralConfig (api_key, model, temp, etc.)                        │    ║
+║  │    → ServerConfig (host, port, cors_origins)                           │    ║
+║  │                                                                         │    ║
+║  └────────────────────────────────────────────────────────────────────────┘    ║
+║                                                                                  ║
+╚══════════════════════════════════════════════════════════════════════════════════╝
+                                      │
+                                      │ HTTPS POST
+                                      │ Authorization: Bearer {API_KEY}
+                                      ↓
+╔══════════════════════════════════════════════════════════════════════════════════╗
+║                          MISTRAL AI API                                          ║
+║                    https://api.mistral.ai/v1                                     ║
+╠══════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                  ║
+║  POST /chat/completions                                                          ║
+║                                                                                  ║
+║  Request:                                                                        ║
+║  {                                                                               ║
+║    "model": "mistral-large-latest",                                              ║
+║    "messages": [{"role": "user", "content": "..."}],                             ║
+║    "stream": true,                                                               ║
+║    "temperature": 0.7                                                            ║
+║  }                                                                               ║
+║                                                                                  ║
+║  Response (SSE Stream):                                                          ║
+║  data: {"choices":[{"delta":{"content":"Hello"}}]}                               ║
+║  data: {"choices":[{"delta":{"content":" world"}}]}                              ║
+║  data: {"choices":[{"delta":{"content":"!"}}]}                                   ║
+║  data: [DONE]                                                                    ║
+║                                                                                  ║
+╚══════════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                              DATA FLOW EXAMPLE                                    │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+User types: "What is the weather?"
+
+1. MessageInput.tsx
+   └─> useChatHandler.sendMessage("What is the weather?")
+
+2. useChatHandler
+   ├─> Store.addMessage({role: "user", content: "What is the weather?"})
+   └─> ChatService.sendMessage(...)
+
+3. ChatService
+   └─> SSEClient.streamChatCompletion(POST /api/chat/stream)
+
+4. Backend Middleware
+   ├─> CORSMiddleware: Allow origin
+   ├─> RequestValidator: Check Content-Type
+   └─> ErrorHandler: Wrap request
+
+5. ChatRoutes.stream_chat()
+   ├─> Validate input (validators.py)
+   ├─> ConversationManager.get_or_create_conversation()
+   └─> MistralService.stream_chat_completion()
+
+6. MistralService
+   ├─> HTTP POST to Mistral AI
+   ├─> Receive SSE stream
+   ├─> Parse chunks
+   └─> Yield StreamChunk objects
+
+7. ChatRoutes
+   └─> Convert chunks to SSE format: "data: {json}\n\n"
+
+8. SSEClient (Frontend)
+   ├─> Receive SSE chunks
+   ├─> Parse JSON from "data: " lines
+   └─> Call onChunk() callback
+
+9. useChatHandler
+   └─> Store.appendToStreamingMessage(chunk.content)
+
+10. MessageBubble.tsx
+    └─> Re-render with updated streaming message
+
+Result: User sees "The" → "The weather" → "The weather is" → ... (word by word)
+
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                           SEPARATION OF POWERS                                    │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+╔════════════╦═══════════════════════════════════╦══════════════════════════════════╗
+║   Layer    ║          Responsibilities          ║         Does NOT Do             ║
+╠════════════╬═══════════════════════════════════╬══════════════════════════════════╣
+║ Frontend   ║                                   ║                                  ║
+║ Components ║ • Render UI                        ║ • Make API calls directly        ║
+║            ║ • Handle user input                ║ • Contain business logic         ║
+║            ║ • Display data                     ║ • Manage complex state           ║
+╠════════════╬═══════════════════════════════════╬══════════════════════════════════╣
+║ Hooks      ║ • Encapsulate logic                ║ • Render UI                      ║
+║            ║ • Coordinate services              ║ • Make HTTP calls directly       ║
+║            ║ • Manage side effects              ║ • Handle SSE streaming           ║
+╠════════════╬═══════════════════════════════════╬══════════════════════════════════╣
+║ Services   ║ • HTTP/SSE communication           ║ • Know about React               ║
+║ (Frontend) ║ • API abstraction                  ║ • Manage component state         ║
+║            ║ • Error handling                   ║ • Render anything                ║
+╠════════════╬═══════════════════════════════════╬══════════════════════════════════╣
+║ Store      ║ • Global state management          ║ • Make API calls                 ║
+║            ║ • State mutations                  ║ • Contain UI logic               ║
+║            ║ • Provide selectors                ║ • Handle side effects            ║
+╠════════════╬═══════════════════════════════════╬══════════════════════════════════╣
+║ Middleware ║ • Process all requests             ║ • Contain business logic         ║
+║ (Backend)  ║ • CORS, validation, errors         ║ • Know about routes              ║
+║            ║ • Request/response formatting      ║ • Call external APIs             ║
+╠════════════╬═══════════════════════════════════╬══════════════════════════════════╣
+║ Routes     ║ • HTTP request/response            ║ • Contain business logic         ║
+║ (Backend)  ║ • Route to services                ║ • Know about Mistral API         ║
+║            ║ • Response formatting              ║ • Manage conversations           ║
+╠════════════╬═══════════════════════════════════╬══════════════════════════════════╣
+║ Services   ║ • Business logic                   ║ • Know about HTTP                ║
+║ (Backend)  ║ • External API calls               ║ • Format responses               ║
+║            ║ • Data processing                  ║ • Handle request validation      ║
+╠════════════╬═══════════════════════════════════╬══════════════════════════════════╣
+║ Models     ║ • Define data structures           ║ • Contain logic                  ║
+║            ║ • Validation schemas               ║ • Make API calls                 ║
+║            ║ • Serialization                    ║ • Know about HTTP                ║
+╚════════════╩═══════════════════════════════════╩══════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                          FILE ORGANIZATION                                        │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+Project Root
+├── backend/                           [17 Python files]
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── routes.py                  ← Route definitions
+│   │   └── chat_routes.py             ← Chat endpoint handlers
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── mistral_service.py         ← Mistral AI integration
+│   │   └── conversation_manager.py    ← Conversation state
+│   ├── middleware/
+│   │   ├── __init__.py
+│   │   ├── error_handler.py           ← Error handling
+│   │   ├── request_validator.py       ← Request validation
+│   │   └── cors.py                    ← CORS config
+│   ├── models/
+│   │   ├── __init__.py
+│   │   └── chat.py                    ← Data models
+│   ├── config/
+│   │   ├── __init__.py
+│   │   └── settings.py                ← Configuration
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── logger.py                  ← Logging
+│   │   └── validators.py              ← Validation utils
+│   ├── __init__.py
+│   ├── app.py                         ← App factory
+│   ├── main.py                        ← Entry point
+│   ├── requirements.txt
+│   ├── .env                           ← Config (with API key)
+│   └── .env.example
+│
+├── frontend/                          [16 TypeScript/React files]
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── layout.tsx             ← Root layout
+│   │   │   └── page.tsx               ← Home page
+│   │   ├── components/
+│   │   │   ├── sidebar/
+│   │   │   │   ├── Sidebar.tsx        ← Conversation list
+│   │   │   │   └── ConversationItem.tsx
+│   │   │   ├── chat/
+│   │   │   │   ├── ChatArea.tsx       ← Message display
+│   │   │   │   ├── MessageBubble.tsx
+│   │   │   │   └── MessageInput.tsx
+│   │   │   └── ChatContainer.tsx      ← Main container
+│   │   ├── hooks/
+│   │   │   └── useChatHandler.ts      ← Chat logic
+│   │   ├── services/
+│   │   │   ├── api-client.ts          ← HTTP client
+│   │   │   ├── sse-client.ts          ← SSE streaming
+│   │   │   ├── chat-service.ts        ← Chat API
+│   │   │   └── conversation-service.ts
+│   │   ├── store/
+│   │   │   └── chat-store.ts          ← Zustand state
+│   │   ├── types/
+│   │   │   ├── chat.ts                ← Chat types
+│   │   │   └── api.ts                 ← API types
+│   │   └── styles/
+│   │       └── globals.css
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── next.config.js
+│   ├── tailwind.config.js
+│   └── .env.local
+│
+├── README.md                          [Documentation]
+├── ARCHITECTURE.md
+├── QUICKSTART.md
+├── PROJECT_SUMMARY.md
+├── VISUAL_ARCHITECTURE.txt            ← This file
+├── setup.sh                           ← Automated setup
+└── .gitignore
+
+TOTAL: 36 source files + 10 config files + 5 documentation files = 51 files
+
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                           KEY DESIGN DECISIONS                                    │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+1. SSE over WebSockets
+   ✓ Simpler protocol
+   ✓ HTTP-based (works everywhere)
+   ✓ Auto-reconnection
+   ✓ Perfect for unidirectional streaming
+
+2. Zustand over Redux
+   ✓ Minimal boilerplate
+   ✓ No providers needed
+   ✓ TypeScript-first
+   ✓ 1KB bundle size
+
+3. Starlette over FastAPI
+   ✓ Lightweight
+   ✓ Built-in SSE support
+   ✓ Async-first
+   ✓ No unnecessary features
+
+4. Service Layer Pattern
+   ✓ Testable business logic
+   ✓ Reusable across endpoints
+   ✓ No HTTP coupling
+   ✓ Clear separation
+
+5. In-Memory Storage (MVP)
+   ✓ Fast development
+   ✓ No DB setup required
+   ✓ Easy to replace later
+   ✓ Perfect for prototype
+
+═══════════════════════════════════════════════════════════════════════════════════
+                            END OF ARCHITECTURE DIAGRAM
+═══════════════════════════════════════════════════════════════════════════════════
