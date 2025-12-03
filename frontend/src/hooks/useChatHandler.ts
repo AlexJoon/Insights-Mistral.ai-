@@ -5,7 +5,9 @@
 
 import { useCallback } from 'react';
 import { useChatStore } from '@/store/chat-store';
+import { Conversation } from '@/types/chat';
 import chatService from '@/services/chat-service';
+import { useConversationRouter } from './useConversationRouter';
 
 export const useChatHandler = () => {
   const {
@@ -17,11 +19,36 @@ export const useChatHandler = () => {
     addMessage,
     updateMessageContent,
     setError,
+    setCurrentConversation,
+    addConversation,
   } = useChatStore();
+
+  const { navigateToConversation } = useConversationRouter();
+
+  const createNewConversation = useCallback(() => {
+    const newConversation: Conversation = {
+      id: crypto.randomUUID(),
+      title: 'New Chat',
+      messages: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    addConversation(newConversation);
+    setCurrentConversation(newConversation);
+
+    // Navigate to new conversation URL
+    navigateToConversation(newConversation.id);
+
+    return newConversation;
+  }, [addConversation, setCurrentConversation, navigateToConversation]);
 
   const sendMessage = useCallback(
     async (messageContent: string) => {
-      if (!currentConversation || isStreaming) return;
+      // Create conversation if it doesn't exist
+      const conversation = currentConversation || createNewConversation();
+
+      if (isStreaming) return;
 
       try {
         // Add user message
@@ -32,7 +59,7 @@ export const useChatHandler = () => {
           timestamp: new Date().toISOString(),
         };
 
-        addMessage(currentConversation.id, userMessage);
+        addMessage(conversation.id, userMessage);
 
         // Prepare streaming
         setIsStreaming(true);
@@ -42,7 +69,7 @@ export const useChatHandler = () => {
 
         await chatService.sendMessage(
           {
-            conversation_id: currentConversation.id,
+            conversation_id: conversation.id,
             message: messageContent,
           },
           {
@@ -69,7 +96,7 @@ export const useChatHandler = () => {
                   timestamp: new Date().toISOString(),
                 };
 
-                addMessage(currentConversation.id, assistantMessage);
+                addMessage(conversation.id, assistantMessage);
               }
 
               setIsStreaming(false);
@@ -91,6 +118,7 @@ export const useChatHandler = () => {
       appendToStreamingMessage,
       addMessage,
       setError,
+      createNewConversation,
     ]
   );
 
@@ -100,9 +128,14 @@ export const useChatHandler = () => {
     clearStreamingMessage();
   }, [setIsStreaming, clearStreamingMessage]);
 
+  const currentStreamingMessage = useChatStore((state) => state.currentStreamingMessage);
+
   return {
+    currentConversation,
+    isStreaming,
+    currentStreamingMessage,
     sendMessage,
     cancelStream,
-    isStreaming,
+    createNewConversation,
   };
 };
