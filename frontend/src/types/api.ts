@@ -23,3 +23,23 @@ export interface RequestOptions {
   body?: any;
   signal?: AbortSignal;
 }
+
+export interface FileUploadResponse {
+  success: boolean;
+  file_id: string;
+  filename: string;
+  file_type: string;
+  file_size: number;
+  chunks_created?: number;
+  message?: string;
+  error?: string;
+}
+
+export interface FileMetadata {
+  file_id: string;
+  filename: string;
+  file_type: string;
+  file_size: number;
+  uploaded_at: string;
+  conversation_id?: string;
+}
