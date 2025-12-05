@@ -5,6 +5,9 @@
 'use client';
 
 import { ReactNode, useState } from 'react';
+import { HeaderMenu } from '@/components/navigation/HeaderMenu';
+import { ThemeToggle } from '@/components/navigation/ThemeToggle';
+import { HelpButton } from '@/components/ui/HelpButton';
 import styles from './AppLayout.module.css';
 
 interface AppLayoutProps {
@@ -34,6 +37,12 @@ export function AppLayout({ sidebar, children }: AppLayoutProps) {
         </svg>
       </button>
 
+      {/* Header Controls - Top Right */}
+      <div className={styles.headerControls}>
+        <ThemeToggle />
+        <HeaderMenu />
+      </div>
+
       {/* Overlay Sidebar */}
       <div
         className={`${styles.sidebarOverlay} ${sidebarOpen ? styles.open : ''}`}
@@ -48,6 +57,9 @@ export function AppLayout({ sidebar, children }: AppLayoutProps) {
       <main className={styles.main}>
         {children}
       </main>
+
+      {/* Help Button - Fixed Bottom Right */}
+      <HelpButton />
     </div>
   );
 }
