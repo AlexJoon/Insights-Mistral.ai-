@@ -56,8 +56,10 @@ export function ConversationList({
   }
 
   return (
-    <div className={styles.list}>
-      {conversations.map((conversation) => (
+    <div className={styles.container}>
+      <h2 className={styles.heading}>Recent Threads</h2>
+      <div className={styles.list}>
+        {conversations.map((conversation) => (
         <div
           key={conversation.id}
           className={`${styles.item} ${
@@ -70,7 +72,6 @@ export function ConversationList({
           >
             <div className={styles.itemContent}>
               <span className={styles.itemTitle}>{getConversationTitle(conversation)}</span>
-              <span className={styles.itemDate}>{formatDate(conversation.updated_at)}</span>
             </div>
           </button>
 
@@ -95,7 +96,8 @@ export function ConversationList({
             </button>
           )}
         </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
