@@ -111,6 +111,50 @@ class PineconeAdapter(VectorDatabaseInterface):
             logger.error(f"Failed to initialize Pinecone: {e}")
             raise VectorDatabaseConnectionError(f"Pinecone initialization failed: {e}")
 
+    def _sanitize_metadata(self, metadata: Dict) -> Dict:
+        """
+        Sanitize metadata for Pinecone compatibility.
+
+        Pinecone requirements:
+        - All values must be JSON-serializable (str, int, float, bool, list of primitives)
+        - No nested dicts
+        - No datetime objects
+        - No null/None values
+        - String values must be <40KB
+
+        Args:
+            metadata: Raw metadata dict
+
+        Returns:
+            Sanitized metadata dict
+        """
+        sanitized = {}
+        for key, value in metadata.items():
+            # Skip None values - Pinecone doesn't accept null
+            if value is None:
+                continue
+            # Convert datetime to ISO string
+            elif hasattr(value, 'isoformat'):
+                sanitized[key] = value.isoformat()
+            # Handle primitive types
+            elif isinstance(value, (str, int, float, bool)):
+                # Truncate long strings to avoid Pinecone limits
+                if isinstance(value, str) and len(value) > 40000:
+                    sanitized[key] = value[:40000]
+                else:
+                    sanitized[key] = value
+            elif isinstance(value, list):
+                # Only keep lists of primitives (no None values in list)
+                if all(isinstance(v, (str, int, float, bool)) and v is not None for v in value):
+                    sanitized[key] = value
+                else:
+                    sanitized[key] = str(value)
+            else:
+                # Convert complex objects to strings
+                sanitized[key] = str(value)
+
+        return sanitized
+
     async def upsert_vectors(
         self,
         ids: List[str],
@@ -144,8 +188,9 @@ class PineconeAdapter(VectorDatabaseInterface):
 
             # Prepare vectors for Pinecone format
             # Pinecone expects: [(id, vector, metadata), ...]
+            # Sanitize metadata to ensure Pinecone compatibility
             vectors_to_upsert = [
-                (id, vector, meta)
+                (id, vector, self._sanitize_metadata(meta))
                 for id, vector, meta in zip(ids, vectors, metadata)
             ]
 

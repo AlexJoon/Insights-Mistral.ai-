@@ -9,6 +9,8 @@ from backend.config.settings import load_config
 from backend.api.routes import create_routes
 from backend.api.chat_routes import ChatRoutes
 from backend.api.rag_routes import RAGRoutes
+from backend.api.file_routes import FileRoutes
+from backend.api.voice_routes import VoiceRoutes
 from backend.services.conversation_manager import ConversationManager
 from backend.services.mistral_service import MistralService
 from backend.services.vector_db.factory import VectorDatabaseFactory
@@ -17,6 +19,8 @@ from backend.services.rag_service import RAGService
 from backend.services.document_parser import DocumentParser
 from backend.services.text_chunker import TextChunker
 from backend.services.syllabus_ingestion_service import SyllabusIngestionService
+from backend.services.file_ingestion_service import FileIngestionService
+from backend.services.voxtral_service import VoxtralService
 from backend.middleware.error_handler import ErrorHandlerMiddleware
 from backend.middleware.request_validator import RequestValidationMiddleware
 from backend.middleware.cors import get_cors_config
@@ -38,6 +42,7 @@ class Application:
         # Initialize RAG services if enabled
         self.rag_service: Optional[RAGService] = None
         self.ingestion_service: Optional[SyllabusIngestionService] = None
+        self.file_ingestion_service: Optional[FileIngestionService] = None
         if self.config.pinecone:
             self._initialize_rag_services()
 
@@ -88,6 +93,14 @@ class Application:
                 chunker=chunker
             )
 
+            # Create file ingestion service (for uploaded files)
+            self.file_ingestion_service = FileIngestionService(
+                vector_db=vector_db,
+                embedding_service=embedding_service,
+                parser=parser,
+                chunker=chunker
+            )
+
             logger.info("✓ RAG services initialized successfully")
 
         except Exception as e:
@@ -95,6 +108,7 @@ class Application:
             logger.warning("RAG features will be disabled")
             self.rag_service = None
             self.ingestion_service = None
+            self.file_ingestion_service = None
 
     def _create_app(self) -> Starlette:
         """
@@ -117,8 +131,24 @@ class Application:
                 ingestion_service=self.ingestion_service
             )
 
+        # Initialize file upload routes if service is available
+        file_routes = None
+        if self.file_ingestion_service:
+            file_routes = FileRoutes(
+                ingestion_service=self.file_ingestion_service
+            )
+
+        # Initialize voice transcription routes
+        voice_routes = None
+        try:
+            voxtral_service = VoxtralService()
+            voice_routes = VoiceRoutes(voxtral_service=voxtral_service)
+            logger.info("✓ Voice transcription service initialized")
+        except Exception as e:
+            logger.warning(f"Voice transcription disabled: {e}")
+
         # Create routes
-        routes = create_routes(chat_routes, rag_routes)
+        routes = create_routes(chat_routes, rag_routes, file_routes, voice_routes)
 
         # Create application
         app = Starlette(

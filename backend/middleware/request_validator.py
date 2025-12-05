@@ -30,8 +30,16 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         if request.method in ["POST", "PUT", "PATCH"]:
             content_type = request.headers.get("content-type", "")
 
-            # Skip validation for SSE endpoints
-            if "/chat/stream" not in request.url.path:
+            # Skip validation for endpoints that accept multipart/form-data
+            multipart_endpoints = [
+                "/chat/stream",
+                "/api/files/upload",
+                "/api/voice/transcribe"
+            ]
+
+            skip_validation = any(endpoint in request.url.path for endpoint in multipart_endpoints)
+
+            if not skip_validation:
                 if not content_type.startswith("application/json"):
                     logger.warning(f"Invalid content type: {content_type}")
                     return JSONResponse(

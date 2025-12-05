@@ -7,6 +7,8 @@ from starlette.routing import Route, Mount
 from starlette.responses import JSONResponse
 from backend.api.chat_routes import ChatRoutes
 from backend.api.rag_routes import RAGRoutes
+from backend.api.file_routes import FileRoutes
+from backend.api.voice_routes import VoiceRoutes
 
 
 async def health_check(request):
@@ -16,7 +18,9 @@ async def health_check(request):
 
 def create_routes(
     chat_routes: ChatRoutes,
-    rag_routes: Optional[RAGRoutes] = None
+    rag_routes: Optional[RAGRoutes] = None,
+    file_routes: Optional[FileRoutes] = None,
+    voice_routes: Optional[VoiceRoutes] = None
 ) -> list:
     """
     Create all application routes.
@@ -24,6 +28,8 @@ def create_routes(
     Args:
         chat_routes: Chat routes handler instance
         rag_routes: Optional RAG routes handler instance
+        file_routes: Optional file upload routes handler instance
+        voice_routes: Optional voice transcription routes handler instance
 
     Returns:
         List of Route objects
@@ -72,5 +78,41 @@ def create_routes(
             ),
         ]
         routes.extend(rag_endpoints)
+
+    # Add file upload routes if available
+    if file_routes:
+        file_endpoints = [
+            # File upload endpoint
+            Route("/api/files/upload", file_routes.upload_file, methods=["POST"]),
+
+            # File management endpoints
+            Route(
+                "/api/files/conversation/{conversation_id}",
+                file_routes.get_conversation_files,
+                methods=["GET"]
+            ),
+            Route(
+                "/api/files/{file_id}",
+                file_routes.get_file_metadata,
+                methods=["GET"]
+            ),
+            Route(
+                "/api/files/{file_id}",
+                file_routes.delete_file,
+                methods=["DELETE"]
+            ),
+        ]
+        routes.extend(file_endpoints)
+
+    # Add voice transcription routes if available
+    if voice_routes:
+        voice_endpoints = [
+            # Voice transcription endpoint
+            Route("/api/voice/transcribe", voice_routes.transcribe_audio, methods=["POST"]),
+
+            # Voice service health check
+            Route("/api/voice/health", voice_routes.health_check, methods=["GET"]),
+        ]
+        routes.extend(voice_endpoints)
 
     return routes
