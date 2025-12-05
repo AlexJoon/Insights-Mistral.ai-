@@ -1,0 +1,45 @@
+/**
+ * FileUpload component styles
+ * Matches MessageActions styling (white background, shadow-xl)
+ */
+
+.hiddenInput {
+  display: none;
+}
+
+.uploadButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: white;
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-xl);
+}
+
+.uploadButton:hover:not(:disabled) {
+  background: var(--color-surface-active);
+  border-color: var(--color-border-hover);
+  color: var(--color-text-primary);
+  transform: translateY(-1px);
+}
+
+.uploadButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.uploadButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.uploadButton svg {
+  width: 16px;
+  height: 16px;
+}
