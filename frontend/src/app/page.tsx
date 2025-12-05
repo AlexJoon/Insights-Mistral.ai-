@@ -5,6 +5,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { LuSquarePen, LuCompass } from 'react-icons/lu';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { CenteredWelcome } from '@/components/layout/CenteredWelcome';
 import { NavigationSidebar } from '@/components/navigation/NavigationSidebar';
@@ -15,7 +16,9 @@ import { Message } from '@/components/chat/Message';
 import { useChatHandler } from '@/hooks/useChatHandler';
 import { useConversationPersistence } from '@/hooks/useConversationPersistence';
 import { useConversationRouter } from '@/hooks/useConversationRouter';
+import { useSearchMode } from '@/hooks/useSearchMode';
 import { useChatStore } from '@/store/chat-store';
+import { fileUploadService } from '@/services/file-upload-service';
 import styles from './page.module.css';
 
 export default function HomePage() {
@@ -30,6 +33,7 @@ export default function HomePage() {
   const { conversations, deleteConversation: deleteConversationFromStore, setCurrentConversation } = useChatStore();
   const { deleteConversation } = useConversationPersistence();
   const { navigateToConversation, navigateToHome } = useConversationRouter();
+  const { searchMode, setSearchMode } = useSearchMode();
 
   useConversationPersistence(); // Initialize persistence
 
@@ -45,6 +49,27 @@ export default function HomePage() {
   const handleSend = async (message: string) => {
     setShowWelcome(false);
     await sendMessage(message);
+  };
+
+  const handleFileUpload = async (file: File) => {
+    try {
+      setShowWelcome(false);
+
+      // Upload file to backend
+      const response = await fileUploadService.uploadFile(
+        file,
+        currentConversation?.id
+      );
+
+      // Notify user of successful upload
+      console.log('File uploaded successfully:', response);
+
+      // Optionally send a message about the uploaded file
+      await sendMessage(`I've uploaded a file: ${file.name}. Can you help me understand it?`);
+    } catch (error) {
+      console.error('File upload error:', error);
+      alert('Failed to upload file. Please try again.');
+    }
   };
 
   const handleSuggestionClick = (prompt: string) => {
@@ -79,18 +104,17 @@ export default function HomePage() {
     {
       id: 'new-chat',
       label: 'New Chat',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path
-            d="M10 4.16667V15.8333M4.16667 10H15.8333"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ),
+      icon: <LuSquarePen size={20} />,
       onClick: handleNewChat,
+    },
+    {
+      id: 'explore',
+      label: 'Explore',
+      icon: <LuCompass size={20} />,
+      onClick: () => {
+        // TODO: Implement explore functionality
+        window.location.hash = '#explore';
+      },
     },
   ];
 
@@ -170,6 +194,9 @@ export default function HomePage() {
           input={
             <ChatInput
               onSend={handleSend}
+              onFileUpload={handleFileUpload}
+              searchMode={searchMode}
+              onSearchModeChange={setSearchMode}
               disabled={isStreaming}
               placeholder="Message Insights..."
             />
@@ -179,18 +206,31 @@ export default function HomePage() {
       ) : (
         <div className={styles.chatView}>
           <div className={styles.messages}>
-            {currentConversation?.messages.map((message) => (
-              <Message
-                key={message.id}
-                content={message.content}
-                role={message.role}
-              />
-            ))}
+            {currentConversation?.messages.map((message, index) => {
+              // Find the corresponding user message for retry functionality
+              const userMessage = message.role === 'assistant' && index > 0
+                ? currentConversation.messages[index - 1]
+                : null;
+
+              const handleRetry = userMessage?.role === 'user'
+                ? () => handleSend(userMessage.content)
+                : undefined;
+
+              return (
+                <Message
+                  key={message.id}
+                  content={message.content}
+                  role={message.role}
+                  onRetry={handleRetry}
+                />
+              );
+            })}
 
             {isStreaming && currentStreamingMessage && (
               <Message
                 content={currentStreamingMessage}
                 role="assistant"
+                isStreaming={true}
               />
             )}
           </div>
@@ -198,6 +238,9 @@ export default function HomePage() {
           <div className={styles.inputContainer}>
             <ChatInput
               onSend={handleSend}
+              onFileUpload={handleFileUpload}
+              searchMode={searchMode}
+              onSearchModeChange={setSearchMode}
               disabled={isStreaming}
               placeholder="Message Insights..."
             />
