@@ -1,0 +1,36 @@
+/**
+ * ThemeToggle component styles
+ * Matches FileUpload and HeaderMenu styling (white background, shadow-xl)
+ */
+
+.toggleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: white;
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-xl);
+}
+
+.toggleButton:hover {
+  background: var(--color-surface-active);
+  border-color: var(--color-border-hover);
+  color: var(--color-text-primary);
+  transform: translateY(-1px);
+}
+
+.toggleButton:active {
+  transform: translateY(0);
+}
+
+.toggleButton svg {
+  width: 16px;
+  height: 16px;
+}
