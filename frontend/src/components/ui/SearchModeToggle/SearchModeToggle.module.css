@@ -1,0 +1,80 @@
+/**
+ * SearchModeToggle styles - iOS-style sliding toggle
+ */
+
+.toggleContainer {
+  position: relative;
+  display: inline-flex;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border-default);
+  border-radius: 20px;
+  padding: 3px;
+  box-shadow: var(--shadow-xl);
+  height: 32px;
+}
+
+.option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 60px;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  border-radius: 18px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color 0.3s ease;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  z-index: 2;
+}
+
+.option:hover:not(:disabled) {
+  color: var(--color-text-primary);
+}
+
+.option.active {
+  color: var(--color-text-primary);
+}
+
+.option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.label {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Sliding background */
+.slider {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  width: calc(50% - 3px);
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+.sliderLeft {
+  left: 3px;
+  transform: translateX(0);
+}
+
+.sliderRight {
+  left: 3px;
+  transform: translateX(100%);
+}
+
+.toggleContainer.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
